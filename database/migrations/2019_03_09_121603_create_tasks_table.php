@@ -18,12 +18,10 @@ class CreateTasksTable extends Migration
             $table->string('name');
             $table->string('description');
             $table->enum('priority',['Low', 'Normal', 'High']);
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
-            $table->enum('status',['Todo', 'Done', 'Verified']);
-            $table->unsignedBigInteger('assigned_to');
+            $table->enum('status',['Created', 'Todo', 'Done', 'Verified']);
+            $table->unsignedBigInteger('assigned_to')->nullable();;
             $table->unsignedBigInteger('created_by');
-            $table->unsignedBigInteger('updated_by');
+            $table->unsignedBigInteger('updated_by')->nullable();;
             $table->softDeletes();
             $table->timestamps();
 
