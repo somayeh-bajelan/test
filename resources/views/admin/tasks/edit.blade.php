@@ -2,8 +2,9 @@
 
 @section('content')
     <div class="container">
+
         <div class="card-header">
-            Add Task
+            Edit Task
         </div>
         <div class="card-body">
             @if ($errors->any())
@@ -15,9 +16,10 @@
                     </ul>
                 </div><br />
             @endif
-            <form method="post" action="{{ route('admin.tasks.store') }}">
+            <form method="post" action="{{ route('admin.tasks.update' , $task->id) }}">
                 <div class="form-group">
                     @csrf
+                    @method('PATCH')
                     <label for="name">Task Name:</label>
                     <input type="text" class="form-control" name="name" value="{{$task->name}}"/>
                 </div>
@@ -43,15 +45,17 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="assigned_to">Status :</label>
-                    <select name="assigned_to" class="form-control form-control-lg">
+                    <label for="status">Status :</label>
+                    <select name="status" class="form-control form-control-lg">
                         @foreach($statuses as $status)
                             <option @if($task->status == $status) selected @endif  value="{{$status}}"> {{$status}}</option>
                         @endforeach
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary">Edit Task</button>
+                <a href="{{ route('admin.tasks.index')}}" class="btn btn-primary">Bake</a>
             </form>
         </div>
+
     </div>
 @endsection

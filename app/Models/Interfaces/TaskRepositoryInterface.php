@@ -19,7 +19,7 @@ interface TaskRepositoryInterface extends RepositoryInterface
      *
      * @return array
      */
-    public static function getAllPossiblePriority(): array ;
+    public static function getAllPossiblePriority(): array;
 
 
     /**
@@ -27,7 +27,7 @@ interface TaskRepositoryInterface extends RepositoryInterface
      * @return array
      * @internal param $role
      */
-    public static function getAllPossibleStatusBaseOnRole(): array;
+    public static function getAllPossibleStatus(): array;
 
 
 }

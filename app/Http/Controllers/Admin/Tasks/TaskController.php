@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Tasks;
 
 use App\Http\Controllers\Admin\Tasks\Requests\TaskCreateRequest;
+use App\Http\Controllers\Admin\Tasks\Requests\TaskUpdateRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Exceptions\AdminUnauthorizedException;
 use App\Models\Entities\Task;
@@ -62,9 +63,9 @@ class TaskController extends Controller
      */
     public function store(TaskCreateRequest $request)
     {
-        if(! Auth::user()->hasPermissionTo('create task for all') && (Auth::user()->id != (int)$request->get('assigned_to') ))
+        if(!$this->checkPermission('create task for all' ,(int)$request->get('assigned_to')))
         {
-            return redirect('/admin/tasks')->with('error', 'User can not create task for this user');
+            return redirect('/admin/tasks')->with('error', 'User can not edit task for this user');
         }
         $data = $request->toArray();
         $data['created_by'] = Auth::user()->id;
@@ -82,7 +83,13 @@ class TaskController extends Controller
      */
     public function show($id)
     {
-        //
+
+        $task = $this->taskRepository->getModelById($id);
+        if(!$this->checkPermission('show all task' ,$task->assigned_to))
+        {
+            return redirect('/admin/tasks')->with('error', 'User can not edit task for this user');
+        }
+        return view('admin.tasks.show' , compact( 'task'));
     }
 
     /**
@@ -94,25 +101,51 @@ class TaskController extends Controller
     public function edit($id)
     {
         $task = $this->taskRepository->getModelById($id);
-        if(! Auth::user()->hasPermissionTo('edit task for all') && (Auth::user()->id != $task->assigned_to ))
+        if(!$this->checkPermission('edit task for all' ,$task->assigned_to ))
         {
             return redirect('/admin/tasks')->with('error', 'User can not edit task for this user');
         }
         $users = User::getAllAccessibleUsers();
-        $statuses =$this->taskRepository->getAllPossibleStatusBaseOnRole();
+        $statuses =$this->taskRepository->getAllPossibleStatus();
         return view('admin.tasks.edit' , compact('statuses','users' , 'task'));
+    }
+
+    public function checkPermission($permission , $assigned_to)
+    {
+        $access = true;
+        if(! Auth::user()->hasPermissionTo($permission) && (Auth::user()->id != $assigned_to ))
+        {
+            $access= false;
+        }
+        return $access;
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param TaskUpdateRequest|Request $request
+     * @param  int $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(TaskUpdateRequest $request, $id)
     {
-        //
+        $task = $this->taskRepository->getModelById($id);
+        if(!$this->checkPermission('edit task for all' ,$task->assigned_to ))
+        {
+            return redirect('/admin/tasks')->with('error', 'User can not edit task for this user');
+        }
+
+        $task->name = $request->get('name');
+        $task->description = $request->get('description');
+        $task->priority = $request->get('priority');
+        $task->status = $request->get('status');
+        $task->assigned_to = $request->get('assigned_to');
+        $task->updated_by =Auth::user()->id;
+
+        $this->taskRepository->update($task);
+
+        return redirect('/admin/tasks')->with('success', 'Task is successfully edit');
+
     }
 
     /**
@@ -123,7 +156,13 @@ class TaskController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $task = $this->taskRepository->getModelById($id);
+        if(!$this->checkPermission('delete all task' ,$task->assigned_to ))
+        {
+            return redirect('/admin/tasks')->with('error', 'User can not destroy task for this user');
+        }
+        $this->taskRepository->removeByModel($task);
+        return redirect('/admin/tasks')->with('success', 'Task has been deleted Successfully');
     }
 
 

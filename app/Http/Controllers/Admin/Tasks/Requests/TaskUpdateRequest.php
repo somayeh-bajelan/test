@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin\Tasks\Requests;
 
+use App\Models\Interfaces\TaskRepositoryInterface;
+use App\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 /*
@@ -11,6 +13,20 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class TaskUpdateRequest extends FormRequest
 {
+    /**
+     * @var TaskRepository
+     */
+    protected $taskRepository;
+    /**
+     *
+     * UserController constructor.
+     * @param TaskRepositoryInterface|TaskRepository $taskRepository
+     * @internal param TaskRepository $taskRepository
+     */
+    public function __construct(TaskRepositoryInterface $taskRepository)
+    {
+        $this->taskRepository = $taskRepository;
+    }
 
     /**
      * Get the validation rules that apply to the request.
@@ -20,11 +36,11 @@ class TaskUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'email' => ['required', 'email', 'unique:users,email'],
-            'phone' => ['required', 'size:12'],
-            'firstName' => ['required'],
-            'lastName' => ['required'],
-            'password' => ['required', 'min:8']
+            'name' => ['required'],
+            'description' => ['required'],
+            'assigned_to' => ['required', 'in:' . implode(',', array_keys(User::getAllAccessibleUsers()))],
+            'priority' => ['required', 'in:' . implode(',', $this->taskRepository->getAllPossiblePriority())],
+            'status' => ['required', 'in:' . implode(',', $this->taskRepository->getAllPossibleStatus())],
         ];
 
     }

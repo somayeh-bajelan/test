@@ -45,7 +45,7 @@ class TaskRepository extends Repository implements TaskRepositoryInterface
      * @return array
      * @internal param $role
      */
-    public static function getAllPossibleStatusBaseOnRole(): array
+    public static function getAllPossibleStatus(): array
     {
         $statuses = [];
 
@@ -57,7 +57,6 @@ class TaskRepository extends Repository implements TaskRepositoryInterface
 
         if(Auth::user()->hasPermissionTo(strtolower( static::STATUS_VERIFIED)))
             $statuses[] = static::STATUS_VERIFIED;
-
 
         return $statuses;
     }

@@ -43,7 +43,9 @@
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Create Task</button>
+                    <a href="{{ route('admin.tasks.index')}}" class="btn btn-primary">Bake</a>
                 </form>
         </div>
+
     </div>
 @endsection
