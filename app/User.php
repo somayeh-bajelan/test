@@ -46,7 +46,8 @@ class User extends Authenticatable
      */
     public static function getAllAccessibleUsers(): array
     {
-        if (Auth::user()->hasAnyRole(['admin'])) {
+        if(Auth::user()->hasAnyPermission(['create task for all', 'edit task for all'] ))
+        {
             return User::get()->Pluck('email', 'id')->toArray();
         }
         else
