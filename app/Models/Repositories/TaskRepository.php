@@ -5,6 +5,7 @@ namespace App\Models\Repositories;
 use App\Models\Entities\Task;
 use App\Models\Interfaces\TaskRepositoryInterface;
 use App\Models\Repository;
+use App\User;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -39,7 +40,6 @@ class TaskRepository extends Repository implements TaskRepositoryInterface
         ];
     }
 
-
     /**
      * Returns all possible status for User entity.
      * @return array
@@ -60,5 +60,32 @@ class TaskRepository extends Repository implements TaskRepositoryInterface
 
         return $statuses;
     }
+    /**
+     * Returns Rules of creation task.
+     * @return array
+     */
+    public function CreateRules(): array
+    {
+        return [
+            'name' => ['required'],
+            'description' => ['required'],
+            'assigned_to' => ['required', 'in:' . implode(',', array_keys(User::getAllAccessibleUsers()))],
+            'priority' => ['required', 'in:' . implode(',', self::getAllPossiblePriority())],
+        ];
+    }
 
+    /**
+     * Returns Rules of edit task.
+     * @return array
+     */
+    public function updateRules(): array
+    {
+        return [
+            'name' => ['required'],
+            'description' => ['required'],
+            'assigned_to' => ['required', 'in:' . implode(',', array_keys(User::getAllAccessibleUsers()))],
+            'priority' => ['required', 'in:' . implode(',', self::getAllPossiblePriority() )],
+            'status' => ['required', 'in:' . implode(',',self::getAllPossibleStatus() )],
+        ];
+    }
 }

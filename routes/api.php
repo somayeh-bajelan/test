@@ -16,3 +16,10 @@ use Illuminate\Http\Request;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::post('user/login', 'Admin\Api\AuthApiController@login');
+
+Route::group(['prefix' => 'admin' , 'middleware' => ['jwt.auth' , 'acl_admin:admin|developer'],'as' => 'admin.'], function () {
+    Route::resource('tasks', 'Admin\Api\TaskApiController');
+});
+

@@ -1,25 +1,23 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Tasks;
+namespace App\Http\Controllers\Admin\Api;
 
-use App\Http\Controllers\Admin\Tasks\Requests\TaskCreateRequest;
-use App\Http\Controllers\Admin\Tasks\Requests\TaskUpdateRequest;
 use App\Http\Controllers\Controller;
-use App\Http\Exceptions\AdminUnauthorizedException;
-use App\Models\Entities\Task;
 use App\Models\Interfaces\TaskRepositoryInterface;
 use App\Models\Repositories\TaskRepository;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
-class TaskController extends Controller
+class TaskApiController extends Controller
 {
     /**
      * @var TaskRepository
      */
     protected $taskRepository;
+
 
 
     /**
@@ -41,38 +39,38 @@ class TaskController extends Controller
     public function index()
     {
         $tasks = $this->taskRepository->getAll();
-        return view('admin.tasks.index', compact('tasks'));
+        return response()->json($tasks);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        $users = User::getAllAccessibleUsers();
-        return view('admin.tasks.create' , compact('users'));
-    }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param TaskCreateRequest|Request $request
+     * @param Request $request
      * @return $this
      */
-    public function store(TaskCreateRequest $request)
+    public function store(Request $request)
     {
+        $data = $request->toArray();
+        //Validated request inputs
+        $validator = Validator::make($data, $this->taskRepository->CreateRules());
+
+        if($validator->fails())
+        {
+            return  response()->json($validator->getMessageBag() , 422);
+        }
+
+        //Check permission
         if(!$this->checkPermission('create task for all' ,(int)$request->get('assigned_to')))
         {
             return redirect('/admin/tasks')->with('error', 'User can not edit task for this user');
         }
-        $data = $request->toArray();
+
         $data['created_by'] = Auth::user()->id;
         $data['status'] = TaskRepositoryInterface::STATUS_CREATED;
 
-        $this->taskRepository->create($data);
-        return redirect('/admin/tasks')->with('success', 'Task is successfully saved');
+        $task =  $this->taskRepository->create($data);
+        return response()->json($task , 200);
     }
 
     /**
@@ -83,32 +81,14 @@ class TaskController extends Controller
      */
     public function show($id)
     {
-
         $task = $this->taskRepository->getModelById($id);
         if(!$this->checkPermission('show all task' ,$task->assigned_to))
         {
-            return redirect('/admin/tasks')->with('error', 'User can not edit task for this user');
+            return  response()->json('User can not create task for this user' , 422);
         }
-        return view('admin.tasks.show' , compact( 'task'));
+        return response()->json($task , 200);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        $task = $this->taskRepository->getModelById($id);
-        if(!$this->checkPermission('edit task for all' ,$task->assigned_to ))
-        {
-            return redirect('/admin/tasks')->with('error', 'User can not edit task for this user');
-        }
-        $users = User::getAllAccessibleUsers();
-        $statuses =$this->taskRepository->getAllPossibleStatus();
-        return view('admin.tasks.edit' , compact('statuses','users' , 'task'));
-    }
 
     public function checkPermission($permission , $assigned_to)
     {
@@ -123,29 +103,38 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param TaskUpdateRequest|Request $request
+     * @param Request $request
      * @param  int $id
      * @return \Illuminate\Http\Response
      */
-    public function update(TaskUpdateRequest $request, $id)
+    public function update(Request $request, $id)
     {
-        $task = $this->taskRepository->getModelById($id);
-        if(!$this->checkPermission('edit task for all' ,$task->assigned_to ))
+        $data = $request->toArray();
+
+        //Validated request inputs
+        $validator = Validator::make($data, $this->taskRepository->updateRules());
+        if($validator->fails())
         {
-            return redirect('/admin/tasks')->with('error', 'User can not edit task for this user');
+            return  response()->json($validator->getMessageBag() , 422);
         }
 
-        $task->name = $request->get('name');
-        $task->description = $request->get('description');
-        $task->priority = $request->get('priority');
+        //Check permission
+        $task = $this->taskRepository->getModelById((int)$id);
+        if(!$this->checkPermission('edit task for all' ,$task->assigned_to ))
+        {
+            return  response()->json('User can not edit task for this user' , 422);
+        }
+
+        $task->name = $request->get('name')?? null;
+        $task->description = $request->get('description')?? null;
+        $task->priority = $request->get('priority')?? null;
         $task->status = $request->get('status');
-        $task->assigned_to = $request->get('assigned_to');
-        $task->updated_by =Auth::user()->id;
+        $task->assigned_to = $request->get('assigned_to')?? null;
+        $task->updated_by =Auth::user()->id?? null;
 
         $this->taskRepository->update($task);
 
-        return redirect('/admin/tasks')->with('success', 'Task is successfully edit');
-
+        return response()->json($task , 200);
     }
 
     /**
@@ -159,12 +148,10 @@ class TaskController extends Controller
         $task = $this->taskRepository->getModelById($id);
         if(!$this->checkPermission('delete all task' ,$task->assigned_to ))
         {
-            return redirect('/admin/tasks')->with('error', 'User can not destroy task for this user');
+            return response()->json('User can not destroy task for this user' , 422);
         }
         $this->taskRepository->removeByModel($task);
-        return redirect('/admin/tasks')->with('success', 'Task has been deleted Successfully');
+        return response()->json('Task has been deleted Successfully' , 200);
     }
-
-
 
 }

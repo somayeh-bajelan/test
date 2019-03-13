@@ -14,6 +14,18 @@
             </div><br/>
         @endif
 
+        @if(session()->get('errors'))
+            <div class="alert alert-danger">
+                @foreach(session()->get('errors') as $error)
+                    @foreach($error as $singleError)
+                    {{$singleError}}
+                        <br>
+                    @endforeach
+                @endforeach
+            </div><br/>
+        @endif
+
+
         <a href="{{ route('admin.tasks.create')}}" class="btn btn-primary">Create</a>
         <table class="table table-striped">
             <thead>
