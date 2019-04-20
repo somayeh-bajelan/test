@@ -63,7 +63,6 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        'sd,fmds,f';
         $data = $request->toArray();
         $validator = Validator::make($data, $this->taskRepository->updateRules());
         if($validator->fails())
