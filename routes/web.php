@@ -17,10 +17,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Auth::routes();
-
-Route::get('/home', 'HomeController@index')->name('home');
-
-Route::group(['prefix' => 'admin' , 'middleware' => ['acl_admin:admin|developer'],'as' => 'admin.'], function () {
-    Route::resource('tasks', 'Admin\Web\TaskController');
+Route::group(['middleware' => 'api', 'prefix' => 'api'], function () {
+    Route::post('user/register', 'Client\Auth\RegisterController@regularRegister')->name('api.regular_register');
 });

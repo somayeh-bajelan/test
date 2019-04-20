@@ -88,4 +88,15 @@ class TaskRepository extends Repository implements TaskRepositoryInterface
             'status' => ['required', 'in:' . implode(',',self::getAllPossibleStatus() )],
         ];
     }
+
+    public function checkPermission($permission , $assigned_to)
+    {
+        $access = true;
+        if(! Auth::user()->hasPermissionTo($permission) && (Auth::user()->id != $assigned_to ))
+        {
+            $access= false;
+        }
+        return $access;
+    }
+
 }

@@ -51,6 +51,7 @@ class TaskApiController extends Controller
      */
     public function store(Request $request)
     {
+        dd($request->header());
         $data = $request->toArray();
         //Validated request inputs
         $validator = Validator::make($data, $this->taskRepository->CreateRules());
@@ -109,6 +110,8 @@ class TaskApiController extends Controller
      */
     public function update(Request $request, $id)
     {
+
+        dd($request->header());
         $data = $request->toArray();
 
         //Validated request inputs
